@@ -14,11 +14,11 @@ type Data struct {
 	Clientid  int       `json:"clientid"`
 	Siteid    int       `json:"siteid"`
 	Provider  string    `json:"provider"`
-	MachineId string    `json:"machine_id"`
+	MachineId string    `json:"machine_id,omitempty"`
 	VRM       string    `json:"vrm"`
 	DateFrom  string    `json:"date_from"`
 	DateTo    string    `json:"date_to"`
-	PaymentID string    `json:"payment_id"`
+	PaymentID string    `json:"payment_id,omitempty"`
 	RawData   string    `json:"raw_data"`
 	Received  time.Time `json:"received"`
 }
@@ -35,6 +35,10 @@ func (d *Data) Save(pstopic string) error {
 
 	if len(d.VRM) == 0 {
 		return errors.New("missing vehicle information")
+	}
+
+	if d.Received.Year() == 0 {
+		d.Received = time.Now()
 	}
 
 	ctx := context.Background()
