@@ -52,7 +52,7 @@ func GetCredentials(clientid string, version int) (Credentials, error) {
 		log.Println(fmt.Errorf("failed to access secret version: %v", err))
 	}
 
-	dbc := Credentals{}
+	dbc := Credentials{}
 
 	err = json.Unmarshal(result.Payload.Data, &dbc)
 	return dbc, err
