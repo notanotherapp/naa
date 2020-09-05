@@ -2,6 +2,9 @@ package payments
 
 import "time"
 
+const PAYBYPHONE = "paybyphone"
+const TAP2PARK = "tap2park"
+
 type Data struct {
 	Clientid  int       `json:"clientid"`
 	Siteid    int       `json:"siteid"`
