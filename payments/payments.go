@@ -3,6 +3,8 @@ package payments
 import (
 	"cloud.google.com/go/pubsub"
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"log"
@@ -11,16 +13,28 @@ import (
 )
 
 type Data struct {
-	Clientid  int       `json:"clientid"`
-	Siteid    int       `json:"siteid"`
-	Provider  string    `json:"provider"`
-	MachineId string    `json:"machine_id,omitempty"`
-	VRM       string    `json:"vrm"`
-	DateFrom  string    `json:"date_from"`
-	DateTo    string    `json:"date_to"`
-	PaymentID string    `json:"payment_id,omitempty"`
-	RawData   string    `json:"raw_data"`
-	Received  time.Time `json:"received"`
+	Clientid  int    `json:"clientid"`
+	Siteid    int    `json:"siteid"`
+	Provider  string `json:"provider"`
+	MachineId string `json:"machine_id,omitempty"`
+	VRM       string `json:"vrm"`
+	DateFrom  string `json:"date_from"`
+	DateTo    string `json:"date_to"`
+	PaymentID string `json:"payment_id,omitempty"`
+	RawData   string `json:"raw_data"`
+}
+
+func (d *Data) getHash() (string, error) {
+
+	j, err := json.Marshal(d)
+
+	if err != nil {
+		log.Println("getHash:", err)
+		return "", err
+	}
+
+	DataHash := sha1.Sum([]byte(j))
+	return hex.EncodeToString(DataHash[:]), nil
 }
 
 func (d *Data) Save(pstopic string) error {
@@ -35,10 +49,6 @@ func (d *Data) Save(pstopic string) error {
 
 	if len(d.VRM) == 0 {
 		return errors.New("missing vehicle information")
-	}
-
-	if d.Received.Year() == 0 {
-		d.Received = time.Now()
 	}
 
 	ctx := context.Background()
@@ -56,6 +66,11 @@ func (d *Data) Save(pstopic string) error {
 	attrib := make(map[string]string)
 
 	attrib["siteid"] = strconv.Itoa(d.Siteid)
+	attrib["hash"], err = d.getHash()
+	if err != nil {
+		return err
+	}
+	attrib["received"] = time.Now().Format("2006-01-02 15:04:05")
 
 	payload, err := json.Marshal(&d)
 
@@ -65,8 +80,8 @@ func (d *Data) Save(pstopic string) error {
 	}
 
 	msg := &pubsub.Message{
-		Data: payload,
-		//Attributes: attrib,
+		Data:       payload,
+		Attributes: attrib,
 	}
 
 	if _, err := topic.Publish(ctx, msg).Get(ctx); err != nil {
