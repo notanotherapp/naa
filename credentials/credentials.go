@@ -38,6 +38,8 @@ func GetCredentials(projectid string, clientid string, version int) (Credentials
 
 	ctx := context.Background()
 	client, err := secretmanager.NewClient(ctx)
+	dbc := Credentials{}
+
 	if err != nil {
 		log.Println(fmt.Errorf("failed to create secretmanager client: %v", err))
 	}
@@ -49,9 +51,8 @@ func GetCredentials(projectid string, clientid string, version int) (Credentials
 	result, err := client.AccessSecretVersion(ctx, req)
 	if err != nil {
 		log.Println(fmt.Errorf("failed to access secret version: %v", err))
+		return dbc, err
 	}
-
-	dbc := Credentials{}
 
 	err = json.Unmarshal(result.Payload.Data, &dbc)
 	return dbc, err
