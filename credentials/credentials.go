@@ -11,7 +11,6 @@ import (
 	"fmt"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	"log"
-	"os"
 )
 
 // --------------------------------------------------------------------------------------------------------------
@@ -35,7 +34,7 @@ type Provider struct {
 
 // --------------------------------------------------------------------------------------------------------------
 
-func GetCredentials(clientid string, version int) (Credentials, error) {
+func GetCredentials(projectid string, clientid string, version int) (Credentials, error) {
 
 	ctx := context.Background()
 	client, err := secretmanager.NewClient(ctx)
@@ -44,7 +43,7 @@ func GetCredentials(clientid string, version int) (Credentials, error) {
 	}
 
 	req := &secretmanagerpb.AccessSecretVersionRequest{
-		Name: fmt.Sprintf("projects/%s/secrets/%s/versions/%d", os.Getenv("PROJECTID"), clientid, version),
+		Name: fmt.Sprintf("projects/%s/secrets/%s/versions/%d", projectid, clientid, version),
 	}
 
 	result, err := client.AccessSecretVersion(ctx, req)
